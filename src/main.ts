@@ -13,6 +13,27 @@ const oEn = document.getElementById('oEn') as HTMLDivElement;
 const oZh = document.getElementById('oZh') as HTMLDivElement;
 const list = document.getElementById('subList') as HTMLDivElement;
 
+let userPauseScrollTimeout: number | undefined;
+let isUserScrolling = false;
+
+function handleManualScroll() {
+    isUserScrolling = true;
+    if (userPauseScrollTimeout) clearTimeout(userPauseScrollTimeout);
+    userPauseScrollTimeout = window.setTimeout(() => {
+        isUserScrolling = false;
+        // Snap back to active when user stops interacting for 3s, only if video is playing
+        if (currentIdx !== -1 && !vP.paused) {
+            const activeEl = document.getElementById(`cue-${currentIdx}`);
+            if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 3000);
+}
+
+list.addEventListener('wheel', handleManualScroll, { passive: true });
+list.addEventListener('touchmove', handleManualScroll, { passive: true });
+list.addEventListener('mousedown', handleManualScroll);
+list.addEventListener('touchstart', handleManualScroll, { passive: true });
+
 function formatT(s: number) {
     if (!s || isNaN(s)) return "0:00";
     const m = Math.floor(s / 60), sec = Math.floor(s % 60);
@@ -77,13 +98,13 @@ function renderSubs(items: any[]) {
 }
 
 function updateActive(idx: number, scroll: boolean) {
-    if (idx === currentIdx && !scroll) return;
+    if (idx === currentIdx) return;
     currentIdx = idx;
     document.querySelectorAll('.sub-item.active').forEach(el => el.classList.remove('active'));
     const activeEl = document.getElementById(`cue-${idx}`);
     if (activeEl) {
         activeEl.classList.add('active');
-        if (scroll) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (scroll && !isUserScrolling) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     const c = cues[idx];
     if (c) { oEn.textContent = c.en; oZh.textContent = c.zh; }
@@ -95,7 +116,9 @@ vP.addEventListener('timeupdate', () => {
     prog.value = ((vP.currentTime / vP.duration) * 100).toString() || "0";
     document.getElementById('timeDisp')!.textContent = `${formatT(vP.currentTime)} / ${formatT(vP.duration)}`;
     const found = cues.findIndex(c => vP.currentTime >= c.s && vP.currentTime <= c.e);
-    if (found !== -1) updateActive(found, true);
+    if (found !== -1 && found !== currentIdx) {
+        updateActive(found, true);
+    }
     if (!isSwapped) vT.currentTime = vP.currentTime;
 });
 
