@@ -21,6 +21,82 @@ const drawer = document.getElementById('playlistDrawer') as HTMLDivElement;
 const drawerOverlay = document.getElementById('drawerOverlay') as HTMLDivElement;
 const lectureList = document.getElementById('lectureList') as HTMLDivElement;
 const courseTag = document.getElementById('courseTag') as HTMLSpanElement;
+const showUploadBtn = document.getElementById('showUploadBtn') as HTMLButtonElement;
+const closeUpload = document.getElementById('closeUpload') as HTMLButtonElement;
+const uploadOverlay = document.getElementById('uploadOverlay') as HTMLDivElement;
+const uploadModal = document.getElementById('uploadModal') as HTMLDivElement;
+const uploadForm = document.getElementById('uploadForm') as HTMLFormElement;
+
+// ========== Feature: Upload Modal ==========
+function toggleUpload(open: boolean) {
+    uploadModal.classList.toggle('open', open);
+    uploadOverlay.classList.toggle('open', open);
+}
+
+showUploadBtn.addEventListener('click', () => toggleUpload(true));
+closeUpload.addEventListener('click', () => toggleUpload(false));
+uploadOverlay.addEventListener('click', () => toggleUpload(false));
+
+uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = (document.getElementById('upTitle') as HTMLInputElement).value;
+    const vPPT = (document.getElementById('upPPT') as HTMLInputElement).files![0];
+    const vTeacher = (document.getElementById('upTeacher') as HTMLInputElement).files![0];
+    const vVTT = (document.getElementById('upVTT') as HTMLInputElement).files![0];
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('videoPPT', vPPT);
+    formData.append('videoTeacher', vTeacher);
+    formData.append('subtitleVTT', vVTT);
+
+    const progressBox = document.getElementById('upProgress')!;
+    const fill = document.getElementById('upFill')!;
+    const status = document.getElementById('upStatus')!;
+    const submitBtn = document.getElementById('submitUpload') as HTMLButtonElement;
+
+    progressBox.style.display = 'block';
+    submitBtn.disabled = true;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload', true);
+
+    xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable) {
+            const percent = (ev.loaded / ev.total) * 100;
+            fill.style.width = percent + '%';
+            status.textContent = `Uploading: ${Math.round(percent)}%`;
+        }
+    };
+
+    xhr.onload = async () => {
+        if (xhr.status === 200) {
+            status.textContent = "Success! Reloading...";
+            // Re-fetch lectures and update list
+            const r = await fetch('/lectures.json');
+            allLectures = await r.json();
+            renderLectureList(allLectures);
+
+            setTimeout(() => {
+                toggleUpload(false);
+                progressBox.style.display = 'none';
+                submitBtn.disabled = false;
+                uploadForm.reset();
+                fill.style.width = '0%';
+            }, 1000);
+        } else {
+            status.textContent = "Error occurred during upload.";
+            submitBtn.disabled = false;
+        }
+    };
+
+    xhr.onerror = () => {
+        status.textContent = "Network error during upload.";
+        submitBtn.disabled = false;
+    };
+
+    xhr.send(formData);
+});
 
 // ========== Feature: Playlist Drawer ==========
 function toggleDrawer(open: boolean) {

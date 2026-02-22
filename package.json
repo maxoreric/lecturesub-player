@@ -6,10 +6,21 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "start": "node server.mjs"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "@types/fs-extra": "^11.0.4",
+        "@types/multer": "^2.0.0",
         "typescript": "^5.2.2",
         "vite": "^5.0.8"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "express": "^5.2.1",
+        "fs-extra": "^11.3.3",
+        "multer": "^2.0.2"
     }
 }

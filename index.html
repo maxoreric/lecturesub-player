@@ -16,6 +16,8 @@
                 <span class="logo">📺 LectureSub</span>
                 <span class="course-tag" id="courseTag">COMP2041/9044 — Week 1</span>
                 <button id="playlistBtn" class="header-btn" title="Open Playlist">📚 Lectures</button>
+                <button id="showUploadBtn" class="header-btn"
+                    style="background:var(--accent); border-color:var(--accent); color:white;">Upload 🔼</button>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
                 <input type="color" id="colorPicker" value="#ffeb3b" title="字幕高亮颜色"
@@ -80,6 +82,44 @@
             </div>
             <div class="lecture-list" id="lectureList">
                 <!-- Will be populated by main.ts -->
+            </div>
+        </div>
+
+        <!-- Upload Modal -->
+        <div class="modal-overlay" id="uploadOverlay"></div>
+        <div class="modal" id="uploadModal">
+            <div class="modal-header">
+                <h3>🔼 New Lecture</h3>
+                <button id="closeUpload" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label>Lecture Title</label>
+                        <input type="text" id="upTitle" placeholder="e.g. Week 2 — Algorithms" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>PPT Video (.mp4)</label>
+                            <input type="file" id="upPPT" accept="video/mp4" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teacher Video (.mp4)</label>
+                            <input type="file" id="upTeacher" accept="video/mp4" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Subtitles (.vtt)</label>
+                        <input type="file" id="upVTT" accept=".vtt" required>
+                    </div>
+                    <button type="submit" class="submit-btn" id="submitUpload">Start Upload</button>
+                    <div class="progress-container" id="upProgress" style="display:none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="upFill"></div>
+                        </div>
+                        <span id="upStatus">Uploading...</span>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
