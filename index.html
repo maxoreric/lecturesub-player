@@ -14,7 +14,8 @@
         <div class="header">
             <div class="header-left">
                 <span class="logo">📺 LectureSub</span>
-                <span class="course-tag">COMP2041/9044 — Week 1</span>
+                <span class="course-tag" id="courseTag">COMP2041/9044 — Week 1</span>
+                <button id="playlistBtn" class="header-btn" title="Open Playlist">📚 Lectures</button>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
                 <input type="color" id="colorPicker" value="#ffeb3b" title="字幕高亮颜色"
@@ -67,6 +68,18 @@
                 <div class="subtitle-list" id="subList">
                     <div style="padding:20px; text-align:center; color:#555;">Loading cues...</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Playlist Drawer -->
+        <div class="drawer-overlay" id="drawerOverlay"></div>
+        <div class="playlist-drawer" id="playlistDrawer">
+            <div class="drawer-header">
+                <h3>📚 All Lectures</h3>
+                <button id="closeDrawer" class="close-btn">&times;</button>
+            </div>
+            <div class="lecture-list" id="lectureList">
+                <!-- Will be populated by main.ts -->
             </div>
         </div>
     </div>

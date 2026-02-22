@@ -15,6 +15,96 @@ const list = document.getElementById('subList') as HTMLDivElement;
 const colorPicker = document.getElementById('colorPicker') as HTMLInputElement;
 const resizer = document.getElementById('resizer') as HTMLDivElement;
 const videoPanel = document.querySelector('.video-panel') as HTMLDivElement;
+const playlistBtn = document.getElementById('playlistBtn') as HTMLButtonElement;
+const closeDrawer = document.getElementById('closeDrawer') as HTMLButtonElement;
+const drawer = document.getElementById('playlistDrawer') as HTMLDivElement;
+const drawerOverlay = document.getElementById('drawerOverlay') as HTMLDivElement;
+const lectureList = document.getElementById('lectureList') as HTMLDivElement;
+const courseTag = document.getElementById('courseTag') as HTMLSpanElement;
+
+// ========== Feature: Playlist Drawer ==========
+function toggleDrawer(open: boolean) {
+    drawer.classList.toggle('open', open);
+    drawerOverlay.classList.toggle('open', open);
+}
+
+playlistBtn.addEventListener('click', () => toggleDrawer(true));
+closeDrawer.addEventListener('click', () => toggleDrawer(false));
+drawerOverlay.addEventListener('click', () => toggleDrawer(false));
+
+// ========== Feature: Dynamic Lecture Loading ==========
+interface Lecture {
+    id: string;
+    title: string;
+    vPPT: string;
+    vTeacher: string;
+    vtt: string;
+}
+
+let allLectures: Lecture[] = [];
+let activeLectureId = '';
+
+async function loadLecture(lec: Lecture) {
+    activeLectureId = lec.id;
+    courseTag.textContent = lec.title;
+    document.title = `📺 ${lec.title}`;
+
+    // Update video sources
+    const pptSource = vP.querySelector('source')!;
+    const teacherSource = vT.querySelector('source')!;
+
+    // Check if source changed to avoid flash
+    if (pptSource.getAttribute('src') !== lec.vPPT) {
+        pptSource.setAttribute('src', lec.vPPT);
+        teacherSource.setAttribute('src', lec.vTeacher);
+        vP.load();
+        vT.load();
+    }
+
+    // Reset subtitles
+    list.innerHTML = '<div style="padding:20px; text-align:center; color:#555;">Loading cues...</div>';
+    oEn.textContent = ''; oZh.textContent = '';
+    currentIdx = -1;
+
+    try {
+        const r = await fetch(lec.vtt);
+        const t = await r.text();
+        cues = parseVTT(t);
+        renderSubs(cues);
+    } catch (err) {
+        console.error("Failed to load VTT:", err);
+    }
+
+    // Update active state in drawer
+    document.querySelectorAll('.lecture-item').forEach(el => {
+        el.classList.toggle('active', (el as HTMLDivElement).dataset.id === lec.id);
+    });
+
+    // Update URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.set('lec', lec.id);
+    window.history.replaceState({}, '', url.toString());
+}
+
+function renderLectureList(lecs: Lecture[]) {
+    lectureList.innerHTML = lecs.map(l => `
+        <div class="lecture-item ${l.id === activeLectureId ? 'active' : ''}" data-id="${l.id}">
+            <div class="lec-title">${l.title}</div>
+        </div>
+    `).join('');
+
+    document.querySelectorAll('.lecture-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = (el as HTMLDivElement).dataset.id;
+            const lec = lecs.find(l => l.id === id);
+            if (lec) {
+                loadLecture(lec);
+                toggleDrawer(false);
+            }
+        });
+    });
+}
+
 
 // ========== Feature: Subtitle Color Picker ==========
 const savedColor = localStorage.getItem('subColor') || '#ffeb3b';
@@ -252,8 +342,21 @@ document.getElementById('searchBox')!.addEventListener('input', () => {
     renderSubs(filtered);
 });
 
-// Setup
-fetch('/clean_transcript_bilingual.vtt').then(r => r.text()).then(t => {
-    cues = parseVTT(t);
-    renderSubs(cues);
-});
+// Setup & Initialization
+async function init() {
+    try {
+        const r = await fetch('/lectures.json');
+        allLectures = await r.json();
+        renderLectureList(allLectures);
+
+        const params = new URLSearchParams(window.location.search);
+        const targetId = params.get('lec');
+        const initial = allLectures.find(l => l.id === targetId) || allLectures[0];
+
+        if (initial) loadLecture(initial);
+    } catch (err) {
+        console.error("Failed to initialize lectures:", err);
+    }
+}
+
+init();
