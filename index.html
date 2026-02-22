@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📺 LectureSub Player</title>
+    <!-- We will let Tailwind or custom CSS handle styling, keeping the original styles for now -->
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+    <div class="app">
+        <div class="header">
+            <div class="header-left">
+                <span class="logo">📺 LectureSub</span>
+                <span class="course-tag">COMP2041/9044 — Week 1</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <input type="text" id="searchBox" placeholder="搜索字幕 (F)...">
+            </div>
+        </div>
+
+        <div class="main">
+            <!-- Video Panel -->
+            <div class="video-panel">
+                <div class="video-container" id="videoContainer">
+                    <video id="vPPT" preload="metadata">
+                        <source src="/COMP2041_COMP9044 Le-s1-full.mp4" type="video/mp4">
+                    </video>
+                    <div class="pip-container" id="pip">
+                        <div class="pip-header"><span style="font-size:9px; color:#aaa; font-weight:600;">🎥
+                                TEACHER</span></div>
+                        <video id="vTeacher" muted preload="metadata">
+                            <source src="/COMP2041_COMP9044 Le-s2-full.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <button class="swap-btn" id="swapBtn" title="Swap Screens">⇄</button>
+                    <div class="subtitle-overlay">
+                        <div class="overlay-en" id="oEn"></div>
+                        <div class="overlay-zh" id="oZh"></div>
+                    </div>
+                </div>
+                <div class="controls">
+                    <button class="play-btn" id="playBtn" title="Play/Pause (Space)">▶</button>
+                    <input type="range" class="progress-bar" id="prog" value="0" step="0.1">
+                    <span class="time-display" id="timeDisp">0:00 / 0:00</span>
+                    <div style="display:flex; gap:6px; margin-left:10px;">
+                        <button class="speed-btn active" data-speed="1">1x</button>
+                        <button class="speed-btn" data-speed="1.25">1.25</button>
+                        <button class="speed-btn" data-speed="1.5">1.5</button>
+                        <button class="speed-btn" data-speed="2">2x</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subtitles Panel -->
+            <div class="subtitle-panel" style="flex:1;">
+                <div class="panel-header">
+                    <h3>Subtitles 字幕</h3><span style="font-size:10px; color:var(--text-dim);" id="subCount">0</span>
+                </div>
+                <div class="subtitle-list" id="subList">
+                    <div style="padding:20px; text-align:center; color:#555;">Loading cues...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
