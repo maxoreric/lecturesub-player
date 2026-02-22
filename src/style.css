@@ -1,6 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
-/* Import pi-web-ui css */
-@import '@mariozechner/pi-web-ui/app.css';
 
 * {
     margin: 0;
@@ -17,13 +15,20 @@
     --text-primary: #e4e4ef;
     --text-secondary: #9898b0;
     --text-dim: #6a6a82;
-    --accent: #7c6bf0;
+    --accent: #007bff;
+    /* Updated */
     --accent-glow: rgba(124, 107, 240, 0.25);
-    --accent-light: #a594ff;
+    --accent-light: #3399ff;
+    /* Updated */
     --chinese-color: #72d4a0;
     --english-color: #d4d4e8;
-    --border: #2a2a3a;
+    --border: #333;
+    /* Updated */
     --scrollbar-thumb: #3a3a52;
+    --surface: #252836;
+    /* New */
+    --sub-active-color: #ffeb3b;
+    /* New */
 }
 
 html,
@@ -73,6 +78,22 @@ body {
     display: flex;
     flex: 1;
     overflow: hidden;
+    padding: 20px;
+    /* Added */
+}
+
+/* Resizer */
+.resizer {
+    width: 6px;
+    background: var(--bg-tertiary);
+    cursor: col-resize;
+    transition: background 0.2s;
+    z-index: 10;
+}
+
+.resizer:hover,
+.resizer.dragging {
+    background: var(--accent);
 }
 
 /* Video Panel */
@@ -212,39 +233,63 @@ video {
 .sub-item {
     padding: 12px 16px;
     cursor: pointer;
-    border-left: 3px solid transparent;
+    border-left: 2px solid transparent;
+    /* Updated */
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    transition: background 0.2s;
+    transition: background-color 0.2s, border-color 0.2s;
+    /* Updated */
 }
 
 .sub-item:hover {
-    background: var(--bg-hover);
+    background: var(--surface);
+    /* Updated */
 }
 
 .sub-item.active {
-    background: var(--bg-active);
-    border-left-color: var(--accent);
+    background: rgba(255, 255, 255, 0.05);
+    /* Updated */
+    border-left-color: var(--sub-active-color);
+    /* Updated */
 }
 
 .sub-item .time {
-    font-size: 9px;
-    color: var(--text-dim);
-    margin-bottom: 4px;
-    font-weight: 600;
+    font-family: 'Geist Mono', monospace;
+    /* Updated */
+    font-size: 11px;
+    /* Updated */
+    color: var(--accent);
+    /* Updated */
+    margin-bottom: 6px;
+    /* Updated */
     font-variant-numeric: tabular-nums;
 }
 
 .sub-item .en {
-    font-size: 12px;
-    color: var(--english-color);
-    margin-bottom: 2px;
-    line-height: 1.5;
+    font-size: 14px;
+    /* Updated */
+    color: var(--text-primary);
+    /* Updated */
+    margin-bottom: 4px;
+    /* Updated */
+    line-height: 1.4;
+    /* Updated */
+    transition: color 0.2s;
+    /* Added */
+}
+
+.sub-item.active .en {
+    /* Added */
+    color: var(--sub-active-color);
+    font-weight: 500;
 }
 
 .sub-item .zh {
-    font-size: 14px;
-    color: var(--chinese-color);
-    line-height: 1.5;
+    font-size: 13px;
+    /* Updated */
+    color: var(--text-secondary);
+    /* Updated */
+    line-height: 1.4;
+    /* Updated */
     font-weight: 500;
 }
 

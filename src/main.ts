@@ -12,6 +12,92 @@ const prog = document.getElementById('prog') as HTMLInputElement;
 const oEn = document.getElementById('oEn') as HTMLDivElement;
 const oZh = document.getElementById('oZh') as HTMLDivElement;
 const list = document.getElementById('subList') as HTMLDivElement;
+const colorPicker = document.getElementById('colorPicker') as HTMLInputElement;
+const resizer = document.getElementById('resizer') as HTMLDivElement;
+const videoPanel = document.querySelector('.video-panel') as HTMLDivElement;
+
+// ========== Feature: Subtitle Color Picker ==========
+const savedColor = localStorage.getItem('subColor') || '#ffeb3b';
+colorPicker.value = savedColor;
+document.documentElement.style.setProperty('--sub-active-color', savedColor);
+
+colorPicker.addEventListener('input', (e) => {
+    const val = (e.target as HTMLInputElement).value;
+    document.documentElement.style.setProperty('--sub-active-color', val);
+    localStorage.setItem('subColor', val);
+});
+
+// ========== Feature: Resizable Panels ==========
+let isDraggingResizer = false;
+const savedWidth = localStorage.getItem('videoPanelWidth');
+if (savedWidth) videoPanel.style.flex = `0 0 ${savedWidth}%`;
+
+resizer.addEventListener('mousedown', () => {
+    isDraggingResizer = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    resizer.classList.add('dragging');
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDraggingResizer) return;
+    const containerWidth = document.querySelector('.main')!.clientWidth;
+    // Calculate percentage, keeping video panel between 20% and 80% width
+    let newWidth = (e.clientX / containerWidth) * 100;
+    if (newWidth < 20) newWidth = 20;
+    if (newWidth > 80) newWidth = 80;
+    videoPanel.style.flex = `0 0 ${newWidth}%`;
+    localStorage.setItem('videoPanelWidth', newWidth.toString());
+});
+
+document.addEventListener('mouseup', () => {
+    if (isDraggingResizer) {
+        isDraggingResizer = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        resizer.classList.remove('dragging');
+    }
+});
+
+// ========== Feature: Keyboard Shortcuts & Fullscreen ==========
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        vP.requestFullscreen().catch(err => console.error(err));
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+vP.addEventListener('dblclick', toggleFullscreen);
+
+document.addEventListener('keydown', (e) => {
+    // Ignore if user is typing in the search box
+    if (document.activeElement === document.getElementById('searchBox')) return;
+
+    switch (e.key.toLowerCase()) {
+        case ' ': // Space to play/pause
+            e.preventDefault();
+            document.getElementById('playBtn')!.click();
+            break;
+        case 'arrowleft': // Left arrow to seek backward 5s
+            e.preventDefault();
+            vP.currentTime = Math.max(0, vP.currentTime - 5);
+            break;
+        case 'arrowright': // Right arrow to seek forward 5s
+            e.preventDefault();
+            vP.currentTime = Math.min(vP.duration, vP.currentTime + 5);
+            break;
+        case 'f': // F to toggle fullscreen
+            e.preventDefault();
+            toggleFullscreen();
+            break;
+        case 'm': // M to mute/unmute active video
+            e.preventDefault();
+            const activeVideo = isSwapped ? vT : vP;
+            activeVideo.muted = !activeVideo.muted;
+            break;
+    }
+});
 
 let userPauseScrollTimeout: number | undefined;
 let isUserScrolling = false;
@@ -144,9 +230,19 @@ document.getElementById('swapBtn')!.addEventListener('click', () => {
     }
 });
 
+// Initial speed load
+const savedSpeed = localStorage.getItem('playSpeed');
+if (savedSpeed) {
+    vP.playbackRate = vT.playbackRate = parseFloat(savedSpeed);
+    document.querySelectorAll('.speed-btn').forEach(b => {
+        b.classList.toggle('active', (b as HTMLButtonElement).dataset.speed === savedSpeed);
+    });
+}
+
 document.querySelectorAll('.speed-btn').forEach(btn => btn.addEventListener('click', (e) => {
     const s = parseFloat((e.currentTarget as HTMLButtonElement).dataset.speed!);
     vP.playbackRate = vT.playbackRate = s;
+    localStorage.setItem('playSpeed', s.toString());
     document.querySelectorAll('.speed-btn').forEach(b => b.classList.toggle('active', b === btn));
 }));
 
