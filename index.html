@@ -20,6 +20,11 @@
                     style="background:var(--accent); border-color:var(--accent); color:white;">Upload 🔼</button>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
+                <div class="offset-control" title="Subtitle Offset (seconds)">
+                    <span style="font-size:12px; color:var(--text-dim);">Offset:</span>
+                    <input type="number" id="subOffset" value="0" step="0.5"
+                        style="width:50px; background:var(--bg-light); border:1px solid var(--border); color:var(--text); border-radius:4px; padding:2px 4px; font-size:12px;">
+                </div>
                 <input type="color" id="colorPicker" value="#ffeb3b" title="字幕高亮颜色"
                     style="width:24px; height:24px; padding:0; border:none; border-radius:4px; cursor:pointer; background:none;">
                 <input type="text" id="searchBox" placeholder="搜索字幕 (F)...">
@@ -112,7 +117,11 @@
                         <label>Subtitles (.vtt)</label>
                         <input type="file" id="upVTT" accept=".vtt" required>
                     </div>
-                    <button type="submit" class="submit-btn" id="submitUpload">Start Upload</button>
+                    <div style="display:flex; gap:10px;">
+                        <button type="submit" class="submit-btn" id="submitUpload">Start Upload</button>
+                        <button type="button" class="submit-btn" id="quickPlayBtn"
+                            style="background:var(--chinese-color); color:#000;">Quick Play (Local) ⚡</button>
+                    </div>
                     <div class="progress-container" id="upProgress" style="display:none;">
                         <div class="progress-bar">
                             <div class="progress-fill" id="upFill"></div>

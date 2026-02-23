@@ -1,9 +1,37 @@
 [
-    {
-        "id": "w1-lec1",
-        "title": "Week 1 — Shell Basics",
-        "vPPT": "/COMP2041_COMP9044 Le-s1-full.mp4",
-        "vTeacher": "/COMP2041_COMP9044 Le-s2-full.mp4",
-        "vtt": "/clean_transcript_bilingual.vtt"
-    }
+  {
+    "id": "w1-lec1",
+    "title": "Week 1 — Shell Basics",
+    "vPPT": "/COMP2041_COMP9044 Le-s1-full.mp4",
+    "vTeacher": "/COMP2041_COMP9044 Le-s2-full.mp4",
+    "vtt": "/clean_transcript_bilingual.vtt"
+  },
+  {
+    "id": "lec_1771813556998",
+    "title": "Test fix upload",
+    "vPPT": "/uploads/lec_1771813556998/ppt.mp4",
+    "vTeacher": "/uploads/lec_1771813556998/teacher.mp4",
+    "vtt": "/uploads/lec_1771813556998/test.vtt"
+  },
+  {
+    "id": "lec_1771818290811",
+    "title": "week1-9044",
+    "vPPT": "/uploads/lec_1771818290811/COMP2041_COMP9044 Le-s1-full.mp4",
+    "vTeacher": "/uploads/lec_1771818290811/COMP2041_COMP9044 Le-s2-full.mp4",
+    "vtt": "/uploads/lec_1771818290811/COMP2041_COMP9044 Le-transcript_bilingual.vtt"
+  },
+  {
+    "id": "lec_1771818832157",
+    "title": "Final Verification",
+    "vPPT": "/uploads/lec_1771818832157/final_ppt.mp4",
+    "vTeacher": "/uploads/lec_1771818832157/final_teacher.mp4",
+    "vtt": "/uploads/lec_1771818832157/final.vtt"
+  },
+  {
+    "id": "lec_1771844537025",
+    "title": "week1.2-9044",
+    "vPPT": "/uploads/lec_1771844537025/COMP2041_COMP9044 Le-s1-full (1).mp4",
+    "vTeacher": "/uploads/lec_1771844537025/COMP2041_COMP9044 Le-s2-full (1).mp4",
+    "vtt": "/uploads/lec_1771844537025/COMP2041_COMP9044 Le-transcript (1).vtt"
+  }
 ]

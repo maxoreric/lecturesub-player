@@ -7,6 +7,11 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
     server: {
+        proxy: {
+            '/api': 'http://localhost:3000',
+            '/uploads': 'http://localhost:3000',
+            '/lectures.json': 'http://localhost:3000'
+        },
         fs: {
             allow: ['..']
         }

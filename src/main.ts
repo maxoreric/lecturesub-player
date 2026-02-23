@@ -5,6 +5,7 @@ let cues: any[] = [];
 let currentIdx = -1;
 let isSwapped = false;
 let isSeeking = false;
+let subOffset = 0;
 
 const vP = document.getElementById('vPPT') as HTMLVideoElement;
 const vT = document.getElementById('vTeacher') as HTMLVideoElement;
@@ -44,7 +45,9 @@ uploadForm.addEventListener('submit', async (e) => {
     const vTeacher = (document.getElementById('upTeacher') as HTMLInputElement).files![0];
     const vVTT = (document.getElementById('upVTT') as HTMLInputElement).files![0];
 
+    const lectureId = `lec_${Date.now()}`;
     const formData = new FormData();
+    formData.append('id', lectureId);
     formData.append('title', title);
     formData.append('videoPPT', vPPT);
     formData.append('videoTeacher', vTeacher);
@@ -98,6 +101,36 @@ uploadForm.addEventListener('submit', async (e) => {
     xhr.send(formData);
 });
 
+document.getElementById('quickPlayBtn')!.addEventListener('click', () => {
+    const title = (document.getElementById('upTitle') as HTMLInputElement).value || "Local File";
+    const fPPT = (document.getElementById('upPPT') as HTMLInputElement).files![0];
+    const fTeacher = (document.getElementById('upTeacher') as HTMLInputElement).files![0];
+    const fVTT = (document.getElementById('upVTT') as HTMLInputElement).files![0];
+
+    if (!fPPT || !fTeacher || !fVTT) {
+        alert("Please select all files (PPT, Teacher, and Subtitles) first.");
+        return;
+    }
+
+    // Create temporary URLs
+    const uPPT = URL.createObjectURL(fPPT);
+    const uTeacher = URL.createObjectURL(fTeacher);
+    const uVTT = URL.createObjectURL(fVTT);
+
+    localObjectUrls = [uPPT, uTeacher, uVTT];
+
+    const localLec: Lecture = {
+        id: `local_${Date.now()}`,
+        title: `[Local] ${title}`,
+        vPPT: uPPT,
+        vTeacher: uTeacher,
+        vtt: uVTT
+    };
+
+    loadLecture(localLec);
+    toggleUpload(false);
+});
+
 // ========== Feature: Playlist Drawer ==========
 function toggleDrawer(open: boolean) {
     drawer.classList.toggle('open', open);
@@ -119,6 +152,7 @@ interface Lecture {
 
 let allLectures: Lecture[] = [];
 let activeLectureId = '';
+let localObjectUrls: string[] = [];
 
 async function loadLecture(lec: Lecture) {
     activeLectureId = lec.id;
@@ -128,6 +162,12 @@ async function loadLecture(lec: Lecture) {
     // Update video sources
     const pptSource = vP.querySelector('source')!;
     const teacherSource = vT.querySelector('source')!;
+
+    // Revoke old local URLs if switching
+    if (localObjectUrls.length > 0) {
+        localObjectUrls.forEach(url => URL.revokeObjectURL(url));
+        localObjectUrls = [];
+    }
 
     // Check if source changed to avoid flash
     if (pptSource.getAttribute('src') !== lec.vPPT) {
@@ -147,6 +187,11 @@ async function loadLecture(lec: Lecture) {
         const t = await r.text();
         cues = parseVTT(t);
         renderSubs(cues);
+
+        // Load saved offset for this lecture
+        const savedOffset = localStorage.getItem(`offset_${lec.id}`);
+        subOffset = savedOffset ? parseFloat(savedOffset) : 0;
+        (document.getElementById('subOffset') as HTMLInputElement).value = subOffset.toString();
     } catch (err) {
         console.error("Failed to load VTT:", err);
     }
@@ -273,12 +318,8 @@ function handleManualScroll() {
     if (userPauseScrollTimeout) clearTimeout(userPauseScrollTimeout);
     userPauseScrollTimeout = window.setTimeout(() => {
         isUserScrolling = false;
-        // Snap back to active when user stops interacting for 3s, only if video is playing
-        if (currentIdx !== -1 && !vP.paused) {
-            const activeEl = document.getElementById(`cue-${currentIdx}`);
-            if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, 3000);
+        // Removed auto-snap to allow free browsing
+    }, 10000); // Increased to 10s
 }
 
 list.addEventListener('wheel', handleManualScroll, { passive: true });
@@ -338,8 +379,8 @@ function renderSubs(items: any[]) {
     document.querySelectorAll('.sub-item').forEach(el => {
         el.addEventListener('click', (e) => {
             const idx = parseInt((e.currentTarget as HTMLDivElement).dataset.i || '0');
-            const targetTime = cues[idx].s;
-            vP.currentTime = vT.currentTime = targetTime;
+            const targetTime = cues[idx].s + subOffset;
+            vP.currentTime = vT.currentTime = Math.max(0, targetTime);
             vP.play(); vT.play();
             document.getElementById('playBtn')!.textContent = '⏸';
             updateActive(idx, true);
@@ -356,7 +397,15 @@ function updateActive(idx: number, scroll: boolean) {
     const activeEl = document.getElementById(`cue-${idx}`);
     if (activeEl) {
         activeEl.classList.add('active');
-        if (scroll && !isUserScrolling) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (scroll && !isUserScrolling) {
+            // Only scroll if active item is out of view
+            const rect = activeEl.getBoundingClientRect();
+            const containerRect = list.getBoundingClientRect();
+            const isVisible = (rect.top >= containerRect.top && rect.bottom <= containerRect.bottom);
+            if (!isVisible) {
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }
     const c = cues[idx];
     if (c) { oEn.textContent = c.en; oZh.textContent = c.zh; }
@@ -367,7 +416,8 @@ vP.addEventListener('timeupdate', () => {
     if (isSeeking) return;
     prog.value = ((vP.currentTime / vP.duration) * 100).toString() || "0";
     document.getElementById('timeDisp')!.textContent = `${formatT(vP.currentTime)} / ${formatT(vP.duration)}`;
-    const found = cues.findIndex(c => vP.currentTime >= c.s && vP.currentTime <= c.e);
+    const adjustedTime = vP.currentTime - subOffset;
+    const found = cues.findIndex(c => adjustedTime >= c.s && adjustedTime <= c.e);
     if (found !== -1 && found !== currentIdx) {
         updateActive(found, true);
     }
@@ -419,6 +469,13 @@ document.getElementById('searchBox')!.addEventListener('input', () => {
 });
 
 // Setup & Initialization
+document.getElementById('subOffset')!.addEventListener('input', (e) => {
+    subOffset = parseFloat((e.target as HTMLInputElement).value) || 0;
+    if (activeLectureId) {
+        localStorage.setItem(`offset_${activeLectureId}`, subOffset.toString());
+    }
+});
+
 async function init() {
     try {
         const r = await fetch('/lectures.json');
