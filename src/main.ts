@@ -6,6 +6,8 @@ let currentIdx = -1;
 let isSwapped = false;
 let isSeeking = false;
 let subOffset = 0;
+interface Note { time: number; text: string; }
+let lectureNotes: Note[] = [];
 
 const vP = document.getElementById('vPPT') as HTMLVideoElement;
 const vT = document.getElementById('vTeacher') as HTMLVideoElement;
@@ -159,15 +161,12 @@ async function loadLecture(lec: Lecture) {
     courseTag.textContent = lec.title;
     document.title = `📺 ${lec.title}`;
 
+    // Save old local URLs to revoke AFTER new sources are set
+    const oldUrls = [...localObjectUrls];
+
     // Update video sources
     const pptSource = vP.querySelector('source')!;
     const teacherSource = vT.querySelector('source')!;
-
-    // Revoke old local URLs if switching
-    if (localObjectUrls.length > 0) {
-        localObjectUrls.forEach(url => URL.revokeObjectURL(url));
-        localObjectUrls = [];
-    }
 
     // Check if source changed to avoid flash
     if (pptSource.getAttribute('src') !== lec.vPPT) {
@@ -192,8 +191,18 @@ async function loadLecture(lec: Lecture) {
         const savedOffset = localStorage.getItem(`offset_${lec.id}`);
         subOffset = savedOffset ? parseFloat(savedOffset) : 0;
         (document.getElementById('subOffset') as HTMLInputElement).value = subOffset.toString();
+
+        // Load saved notes
+        const savedNotes = localStorage.getItem(`notes_${lec.id}`);
+        lectureNotes = savedNotes ? JSON.parse(savedNotes) : [];
+        renderNotes();
     } catch (err) {
         console.error("Failed to load VTT:", err);
+    }
+
+    // Revoke old local URLs AFTER everything is loaded
+    if (oldUrls.length > 0) {
+        oldUrls.forEach(url => URL.revokeObjectURL(url));
     }
 
     // Update active state in drawer
@@ -466,6 +475,95 @@ document.getElementById('searchBox')!.addEventListener('input', () => {
     const q = (document.getElementById('searchBox') as HTMLInputElement).value.toLowerCase();
     const filtered = cues.filter(c => c.en.toLowerCase().includes(q) || c.zh.includes(q));
     renderSubs(filtered);
+});
+
+// ========== Feature: Markdown Notebook ==========
+const notesList = document.getElementById('notesList')!;
+const tabSubs = document.getElementById('tabSubs')!;
+const tabNotes = document.getElementById('tabNotes')!;
+const subsView = document.getElementById('subsView')!;
+const notesView = document.getElementById('notesView')!;
+
+function renderNotes() {
+    if (lectureNotes.length === 0) {
+        notesList.innerHTML = '<div class="notes-empty">暂无笔记，点击上方按钮开始打点记录...</div>';
+        return;
+    }
+    // Sort by time
+    lectureNotes.sort((a, b) => a.time - b.time);
+    const html = lectureNotes.map((note, idx) => `
+        <div class="note-item" data-idx="${idx}">
+            <div class="note-header">
+                <span class="note-time" onclick="window.seekTo(${note.time})">${formatT(note.time)}</span>
+                <button class="note-delete" onclick="window.deleteNote(${idx})">&times;</button>
+            </div>
+            <textarea class="note-textarea" placeholder="输入 Markdown 笔记..." oninput="window.updateNote(${idx}, this.value)">${note.text}</textarea>
+        </div>
+    `).join('');
+    notesList.innerHTML = html;
+}
+
+// Attach to window so onclick handlers work
+(window as any).seekTo = (t: number) => { vP.currentTime = vT.currentTime = t; vP.play(); vT.play(); };
+(window as any).deleteNote = (idx: number) => {
+    if (confirm('确定删除这条笔记吗？')) {
+        lectureNotes.splice(idx, 1);
+        saveNotes();
+        renderNotes();
+    }
+};
+(window as any).updateNote = (idx: number, val: string) => {
+    lectureNotes[idx].text = val;
+    saveNotes();
+};
+
+function saveNotes() {
+    if (activeLectureId) {
+        localStorage.setItem(`notes_${activeLectureId}`, JSON.stringify(lectureNotes));
+    }
+}
+
+document.getElementById('addNoteBtn')!.addEventListener('click', () => {
+    lectureNotes.push({ time: vP.currentTime, text: '' });
+    renderNotes();
+    saveNotes();
+    // Use setTimeout to focus the new textarea
+    setTimeout(() => {
+        const textareas = notesList.querySelectorAll('textarea');
+        const last = textareas[textareas.length - 1] as HTMLTextAreaElement;
+        if (last) last.focus();
+    }, 50);
+});
+
+document.getElementById('downloadNotesBtn')!.addEventListener('click', () => {
+    if (lectureNotes.length === 0) { alert('没有笔记可以下载。'); return; }
+    const title = document.getElementById('courseTag')!.textContent || 'Notes';
+    let md = `# ${title} - Subtitle Notes\n\n`;
+    lectureNotes.forEach(n => {
+        md += `### [${formatT(n.time)}]\n${n.text}\n\n---\n\n`;
+    });
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, '_')}_notes.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// Tab handling
+tabSubs.addEventListener('click', () => {
+    tabSubs.classList.add('active');
+    tabNotes.classList.remove('active');
+    subsView.style.display = 'flex';
+    notesView.style.display = 'none';
+});
+
+tabNotes.addEventListener('click', () => {
+    tabNotes.classList.add('active');
+    tabSubs.classList.remove('active');
+    subsView.style.display = 'none';
+    notesView.style.display = 'flex';
 });
 
 // Setup & Initialization

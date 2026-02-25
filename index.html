@@ -13,7 +13,10 @@
     <div class="app">
         <div class="header">
             <div class="header-left">
-                <span class="logo">📺 LectureSub</span>
+                <div class="logo">
+                    <img src="/assets/logo.png" alt="LectureSub Logo" style="height:32px; width:auto;">
+                    <span>LectureSub</span>
+                </div>
                 <span class="course-tag" id="courseTag">COMP2041/9044 — Week 1</span>
                 <button id="playlistBtn" class="header-btn" title="Open Playlist">📚 Lectures</button>
                 <button id="showUploadBtn" class="header-btn"
@@ -67,13 +70,37 @@
             <!-- Resizer -->
             <div class="resizer" id="resizer" title="Drag to resize"></div>
 
-            <!-- Subtitles Panel -->
+            <!-- Right Panel (Subtitles & Notes) -->
             <div class="subtitle-panel" id="subtitlePanel" style="flex:1;">
                 <div class="panel-header">
-                    <h3>Subtitles 字幕</h3><span style="font-size:10px; color:var(--text-dim);" id="subCount">0</span>
+                    <div class="panel-tabs">
+                        <button class="tab-btn active" id="tabSubs">Subtitles 字幕</button>
+                        <button class="tab-btn" id="tabNotes">Notes 笔记</button>
+                    </div>
                 </div>
-                <div class="subtitle-list" id="subList">
-                    <div style="padding:20px; text-align:center; color:#555;">Loading cues...</div>
+
+                <!-- Subtitles View -->
+                <div id="subsView" class="view-panel active" style="display:flex; flex-direction:column; height:100%;">
+                    <div
+                        style="padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 10px; color: var(--text-dim);">
+                        Total: <span id="subCount">0</span>
+                    </div>
+                    <div class="subtitle-list" id="subList">
+                        <div style="padding:20px; text-align:center; color:#555;">Loading cues...</div>
+                    </div>
+                </div>
+
+                <!-- Notes View -->
+                <div id="notesView" class="notes-panel">
+                    <div class="notes-controls">
+                        <button class="header-btn" id="addNoteBtn"
+                            style="margin-left:0; background:var(--accent); color:white; border:none;">+ Add Note
+                            打点</button>
+                        <button class="header-btn" id="downloadNotesBtn">Download MD 下载</button>
+                    </div>
+                    <div class="notes-list" id="notesList">
+                        <!-- Notes will be populated here -->
+                    </div>
                 </div>
             </div>
         </div>
